@@ -60,7 +60,8 @@ def float2time(time):
     time = int(time)
     hour = time // 10000
     minute = (time % 10000) // 100
-    return datetime.time(hour, minute)
+    second = time % 100
+    return datetime.time(hour, minute, second)
 
 def paddedString(s, encoding):
     # decode and trim zero/space padded strings
@@ -108,6 +109,12 @@ class TimeColumn(Column):
     def read(self, bytes):
         """Convert read bytes from MBF to time string"""
         return float2time(fmsbin2ieee(bytes))
+
+class DateTimeColumn(Column):
+    """A time column"""
+    def read(self, bytes):
+        """Convert read bytes from MBF to time string"""
+        return float2datetime(fmsbin2ieee(bytes))
 
 class FloatColumn(Column):
     """
@@ -452,7 +459,9 @@ def metastock_read_last(filename, offsetline = 0):
         
         fields = int(file_handle.tell() / (last_record * 4))
         # print(fields)
-        if fields == 7:
+        if fields == 6:
+            columns = ['time', 'open', 'high', 'low', 'close', 'volume']
+        elif fields == 7:
             columns = ['date', 'open', 'high', 'low', 'close', 'volume', 'oi']
         elif fields == 8:
             columns = ['date', 'time', 'open', 'high', 'low', 'close', 'volume', 'oi']
@@ -490,3 +499,55 @@ def metastock_read_last(filename, offsetline = 0):
         res = res.set_index('date') 
     # return res    
     return json
+
+def metastock_read_ift(filename, fields = 4):
+    """
+    reads a metastock .DAT file
+
+    Parameters
+    ----------
+    filename : str
+        location.
+    fields : int, optional
+        number of columns. The default is 7. Only 7 or 8 are supported
+
+    :Returns:
+    -------
+    res : pd.DataFrame
+        timeseries read
+    """
+    if pd.isna(fields):
+        fields = 4
+    fields = int(fields)
+  
+    offsetline   =0
+    with open(filename, 'rb') as file_handle:
+        _ = struct.unpack("H", file_handle.read(2))[0]
+        # last_rec = struct.unpack("H", file_handle.read(2))[0]
+        # file_handle.seek((fields - 1) * 4, os.SEEK_CUR) 
+        # last_record = struct.unpack("H", file_handle.read(2))[0]       
+        # last_record += offsetline
+        # file_handle.seek(0, os.SEEK_END)
+        # fields = int(file_handle.tell() / (last_record * 4))
+        # print(fields)   
+        last_record = struct.unpack("H", file_handle.read(2))[0]
+        file_handle.seek((fields - 1) * 4, os.SEEK_CUR)     
+        columns = ['date', 'time', 'close', 'volume']
+            # raise ValueError('do not know how to read this number of columns %i'%fields)  
+        rows = []
+        for _ in range(last_record - 1):
+            row = []
+            for column in columns:
+                col = knownMSColumns.get(column)
+                if col is None:
+                    file_handle.seek(unknownColumnDataSize, os.SEEK_CUR)
+                else:
+                    byte = file_handle.read(col.dataSize)
+                    value = col.read(byte)
+                    row.append(value)
+                    # print(value)
+            rows.append(row)
+    res = pd.DataFrame(rows, columns = columns)
+    res['datetime'] = [datetime.datetime.combine(date, time) for date, time in zip(res['date'], res['time'])]
+    res = res.set_index('datetime')
+    return res
