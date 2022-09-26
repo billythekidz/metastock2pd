@@ -48,7 +48,7 @@ def ExportDAT(symbol, filename, fromtime, totime):
 
 #   CONFIG HEADER
 currentDateString = dt.datetime.now().strftime('%d%m%Y')  
-pathExport = f'C:/AmiExportData/VN/{currentDateString}/'
+pathExport = f'C:/AmiExportData/VN/VNALL_{currentDateString}/'
 os.makedirs(pathExport, exist_ok = True)
 for root, dirs, files in os.walk("C:\\ami\MetaStock\Intraday"):
     for file in files:
