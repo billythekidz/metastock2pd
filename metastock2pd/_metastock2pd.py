@@ -527,20 +527,15 @@ def metastock_read_ift(filename, fields = 4):
     offsetline   =0
     with open(filename, 'rb') as file_handle:
         _ = struct.unpack("H", file_handle.read(2))[0]
-        # last_rec = struct.unpack("H", file_handle.read(2))[0]
-        # file_handle.seek((fields - 1) * 4, os.SEEK_CUR) 
-        # last_record = struct.unpack("H", file_handle.read(2))[0]       
-        # last_record += offsetline
-        # file_handle.seek(0, os.SEEK_END)
-        # fields = int(file_handle.tell() / (last_record * 4))
-        # print(fields)   
         last_record = struct.unpack("H", file_handle.read(2))[0]
-        file_handle.seek((fields - 1) * 4, os.SEEK_CUR)     
-        # file_handle.seek(0, os.SEEK_END)
+        file_handle.seek((fields - 1) * 4, os.SEEK_CUR)  
+
         columns = ['date', 'time', 'close', 'volume']
             # raise ValueError('do not know how to read this number of columns %i'%fields)  
         rows = []
-        for _ in range(last_record - 1):
+        # for _ in range(last_record - 1):
+        flag = True
+        while flag:
             row = []
             for column in columns:
                 col = knownMSColumns.get(column)
@@ -548,10 +543,14 @@ def metastock_read_ift(filename, fields = 4):
                     file_handle.seek(unknownColumnDataSize, os.SEEK_CUR)
                 else:
                     byte = file_handle.read(col.dataSize)
+                    if not byte: 
+                        flag = False
+                        break
                     value = col.read(byte)
                     row.append(value)
                     # print(value)
-            rows.append(row)
+            if row: rows.append(row)
+
     res = pd.DataFrame(rows, columns = columns)
     res['datetime'] = [datetime.datetime.combine(date, time) for date, time in zip(res['date'], res['time'])]
     res = res.set_index('datetime')
