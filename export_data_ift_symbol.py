@@ -8,17 +8,23 @@ from time import sleep
 import csv
 import datetime as dt
 # from torch_sparse import dictable
+#   CONFIG HEADER
+symbol = 'VN30F1M'
+digits = 1
+todayOnly = True
 
 open_market_time = dt.datetime.strptime("09:00:00 AM", '%I:%M:%S %p')
 close_market_time = dt.datetime.strptime("02:30:59 PM", '%I:%M:%S %p')
 def ExportDAT(symbol, filename, fromtime, totime):
     df = metastock.metastock_read_ift(filename)    
+    timenow = dt.datetime.now()
+    timenows = timenow.strftime('%d%m%Y') 
     # print(df)
-    with open(pathExport + f'{symbol}_{fromtime}_{totime}.csv'.replace('/','').replace('^',''), 'w', newline='') as mcFile:
+    with open(pathExport + f'{symbol}_{timenows}.csv'.replace('/','').replace('^',''), 'w', newline='') as mcFile:
         for index, row in df.iterrows():            
             datetime = index  
-            if (datetime.time() < open_market_time.time() or datetime.time() > close_market_time.time()):        
-                continue   
+            if (datetime.time() < open_market_time.time() or datetime.time() > close_market_time.time()): continue   
+            if todayOnly and datetime.date() != timenow.date(): continue
             acsii_date = datetime.strftime('%m/%d/%Y')    
             acsii_time = datetime.strftime('%I:%M:%S %p')      
             price = round(row['close'], digits)
@@ -29,10 +35,6 @@ def ExportDAT(symbol, filename, fromtime, totime):
 
             # print(index, price, volume)
         
-
-#   CONFIG HEADER
-symbol = 'VN30F1M'
-digits = 1
 
 currentDateString = dt.datetime.now().strftime('%d%m%Y')  
 pathExport = f'C:/AmiExportData/SYMBOL/{currentDateString}/'
