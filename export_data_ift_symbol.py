@@ -37,16 +37,16 @@ digits = 1
 currentDateString = dt.datetime.now().strftime('%d%m%Y')  
 pathExport = f'C:/AmiExportData/SYMBOL/{currentDateString}/'
 os.makedirs(pathExport, exist_ok = True)
-for root, dirs, files in os.walk("C:\\ami\MetaStock\Intraday"):
+for root, dirs, files in os.walk("C:\\ami\MetaStock\intraday"):
     for file in files:
         if file == ("MASTER"):
             fullpath = os.path.join(root, file)
             # print(root)
             res = metastock.metastock_read_master(root)
             dicts = (res.to_dict('records'))    
-            for record in dicts:              
-                print (record)                  
-                if symbol == record['symbol']:                    
+            for record in dicts:                                             
+                if symbol == record['symbol']:
+                    print (record)                       
                     fileurl = record['filename']
                     first_date = record['first_date'].strftime('%d%m%Y') 
                     last_date = record['last_date'].strftime('%d%m%Y') 

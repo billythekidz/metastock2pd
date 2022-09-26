@@ -44,6 +44,10 @@ def float2date(date):
     year = 1900 + (date // 10000)
     month = (date % 10000) // 100
     day = date % 100
+    month = max(month, 1)
+    month = min(month, 12)
+    day = max(day, 1)
+    day = min(day, 31)
     return datetime.datetime(year, month, day)
 
 def int2date(date):
@@ -532,6 +536,7 @@ def metastock_read_ift(filename, fields = 4):
         # print(fields)   
         last_record = struct.unpack("H", file_handle.read(2))[0]
         file_handle.seek((fields - 1) * 4, os.SEEK_CUR)     
+        # file_handle.seek(0, os.SEEK_END)
         columns = ['date', 'time', 'close', 'volume']
             # raise ValueError('do not know how to read this number of columns %i'%fields)  
         rows = []
