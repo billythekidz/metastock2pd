@@ -462,8 +462,10 @@ def metastock_read_last(filename, offsetline = 0):
         file_handle.seek(0, os.SEEK_END)
         
         fields = int(file_handle.tell() / (last_record * 4))
-        # print(fields)
-        if fields == 6:
+        print("metastock_read_last" , " ", fields)
+        if fields == 4:
+            columns = ['date', 'time', 'close', 'volume']
+        elif fields == 6:
             columns = ['time', 'open', 'high', 'low', 'close', 'volume']
         elif fields == 7:
             columns = ['date', 'open', 'high', 'low', 'close', 'volume', 'oi']
@@ -474,6 +476,7 @@ def metastock_read_last(filename, offsetline = 0):
         # file_handle.seek((fields) * 4, os.SEEK_SET)            
         # for _ in range(last_rec - 2):            
         file_handle.seek(fields * 4 * (last_record - 1), os.SEEK_SET)        
+        # file_handle.seek(-fields * 4, os.SEEK_END)
         # file_handle.seek(-(fields) * 4, os.SEEK_CUR)
         # for x in range(last_record - 2):         
         #     for column in columns:
@@ -496,7 +499,7 @@ def metastock_read_last(filename, offsetline = 0):
                 json[column] = value
         rows.append(row)
     res = pd.DataFrame(rows, columns = columns)
-    if fields == 8:
+    if fields == 8 or fields == 4:
         res['datetime'] = [datetime.datetime.combine(date, time) for date, time in zip(res['date'], res['time'])]
         res = res.set_index('datetime')
     elif fields == 7:
