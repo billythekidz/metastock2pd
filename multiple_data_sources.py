@@ -35,6 +35,11 @@ class MetastockDataSources:
     def SetSymbol(self, symbol):
         self.symbol = symbol
         self.symbolPath = self.GetSymbolPath(symbol)
+        # if not symbol in self.save: 
+        self.save[symbol] = {}
+        self.save[symbol]["lastPrice"] = -1
+        self.save[symbol]["lastVolume"] = -1
+        self.save[symbol]["lastTime"] = dt.datetime.now().time
 
     # def ReadLastDAT(self, filename):
     #     df = metastock.metastock_read_last(filename)
@@ -44,7 +49,7 @@ class MetastockDataSources:
         if self.sourcesType == "DATATICK":
             return self.GetLastTick(self.symbolPath, self.symbol)
         elif self.sourcesType == "IFT":
-            return self.GetLastTick(self.symbolPath, self.symbol)
+            return self.GetLastTickIFT(self.symbolPath, self.symbol)
         return []
 
     def GetLastTick(self, path, symbol):
@@ -55,11 +60,6 @@ class MetastockDataSources:
         newVolume = df['volume']
         # print ("newTime ", newTime)
         dateTime = dt.datetime.now()        
-        if not symbol in self.save: 
-            self.save[symbol] = {}
-            self.save[symbol]["lastPrice"] = -1
-            self.save[symbol]["lastVolume"] = -1
-            self.save[symbol]["lastTime"] = dt.datetime.now().time
         lastPrice = self.save[symbol]["lastPrice"]
         lastVolume = self.save[symbol]["lastVolume"]
         lastTime  = self.save[symbol]["lastTime"]
@@ -71,28 +71,47 @@ class MetastockDataSources:
         acsii_time = dateTime.strftime('%I:%M:%S %p')      
         self.save[symbol]["lastPrice"] = newPrice
         self.save[symbol]["lastVolume"] = newVolume
-        self.save[symbol]["lastTime"] = newTime
-        return [acsii_date, acsii_time, newPrice, tickvolume]
+        self.save[symbol]["lastTime"] = dateTime
+        self.save[symbol]["lastTick"] = [acsii_date, acsii_time, newPrice, tickvolume]
+        self.save[symbol]["lastSaveTime"] = dateTime
+        return self.save[symbol]["lastTick"]
 
     def GetLastTickIFT(self, path, symbol):
-        df = metastock.metastock_read_last(path)    
+        df = metastock.metastock_read_last_ift(path)    
         timenow = dt.datetime.now()
         timenows = timenow.strftime('%d%m%Y')            
         acsii_date = df['date'].strftime('%m/%d/%Y')    
         acsii_time = df['time'].strftime('%I:%M:%S %p')       
-        tickPrice = df['close']
+        tickPrice = round(df['close'],digits)
         tickVolume = df['volume']  
-        return [acsii_date, acsii_time, tickPrice, tickVolume]
-
+        self.save[symbol]["lastSaveTime"] = df['time']
+        self.save[symbol]["lastTick"] = [acsii_date, acsii_time, tickPrice, tickVolume]
+        return self.save[symbol]["lastTick"]
+    def GetLastSaveTime(self, symbol):
+        if symbol in self.save and "lastSaveTime" in self.save[symbol]:
+            return self.save[symbol]["lastSaveTime"] 
+        return dt.datetime.fromordinal(1)
+    def WriteFileLastTick(self, path, symbol):
+        if symbol in self.save and "lastTick" in self.save[symbol]:
+            with open(path.replace('/','').replace('^',''), 'a', newline='') as mcFile:
+                mcWriter = csv.writer(mcFile, delimiter=',', quoting=csv.QUOTE_NONE, escapechar='\\', doublequote=False) 
+                mcWriter.writerow(self.save[symbol]["lastTick"])
 
 #   CONFIG HEADER
+symbol = 'VN30F1M'
 digits = 1
+switch_data_sources_seconds = 10
 
 dataTick =  MetastockDataSources('C:\DataTick\intraday', "DATATICK")
-dataIFT =  MetastockDataSources('C:\DataTick\intraday', "IFT")
-dataTick.SetSymbol('^GOLD')# GetPath(dataTickPath, symbol)
-dataIFT.SetSymbol("^DOW30 FUTURE")
+# dataIFT =  MetastockDataSources('C:\DataTick\intraday', "IFT")
+# dataIFT = MetastockDataSources('C:\\ami\MetaStock\Intraday\\warrant', "IFT")
+dataIFT = MetastockDataSources('C:\\ami\MetaStock\EOD\other', "IFT")
+dataTick.SetSymbol('USD/JPY')# GetPath(dataTickPath, symbol)
+dataIFT.SetSymbol('^USD/JPY')
 # dataTick.ListingSymbols()
+# dataIFT.ListingSymbols()
+print(dataIFT.symbolPath)
+print(dataTick.symbolPath)
 # iftPath = 'C:\\ami\MetaStock\EOD\other'#
 # iftPath = 'C:\\ami\MetaStock\Intraday\\futures'
 
@@ -100,18 +119,40 @@ lastPrice = -1
 lastVolume = -1
 lastTime = dt.datetime.now().time
 open_market_time = dt.datetime.strptime("09:00:00 AM", '%I:%M:%S %p')
+pausing_market_time = dt.datetime.strptime("11:30:00 AM", '%I:%M:%S %p')
+resume_market_time = dt.datetime.strptime("01:00:00 PM", '%I:%M:%S %p')
 close_market_time = dt.datetime.strptime("02:30:59 PM", '%I:%M:%S %p')
 for changes in watch(dataTick.symbolPath, dataIFT.symbolPath, step=1):
     # print('.', sep=' ', end='', flush=True)   
-    # print(changes)
-    if changes.pop()[1] == dataTick.symbolPath: 
-        print("dataTick ", dataTick.GetMyLastTick()) 
-    # if changes[1] == dataIFT.symbolPath: dataIFT.GetMyLastTick()
-    # print("dataTick ", dataTick.GetMyLastTick()) 
-    # print("dataIFT ", dataIFT.GetMyLastTick())
-    dateTime = dt.datetime.now()
-    if (dateTime.time() < open_market_time.time() or dateTime.time() > close_market_time.time()):        
-        continue     
+    print(changes)
+    # continue
+    for change in changes:
+        # change = changes.pop()
+        timenow = dt.datetime.now()
+        if (timenow.time() < open_market_time.time() or timenow.time() > close_market_time.time()):        
+            continue
+        if change[1] == dataTick.symbolPath: 
+            last_tick_1 = dataTick.GetMyLastTick()       
+        if change[1] == dataIFT.symbolPath: 
+            last_tick_2 = dataIFT.GetMyLastTick()
+        
+        deltaTime = timenow-dt.datetime(dataTick.GetLastSaveTime())        
+        if (deltaTime.total_seconds >= switch_data_sources_seconds and dataTick.GetLastSaveTime() < dataIFT.GetLastSaveTime()):
+            dataIFT.WriteFileLastTick('C:/AmiExportData/' + f'{symbol}_TEST.csv', symbol)
+        else:
+            dataTick.WriteFileLastTick('C:/AmiExportData/' + f'{symbol}_TEST.csv', symbol)
+
+        if change[1] == dataTick.symbolPath: 
+            dataTick.WriteFileLastTick('C:/AmiExportData/SYMBOL/' + f'{symbol}_DT.csv')                   
+            print("dataTick ", last_tick_1) 
+        if change[1] == dataIFT.symbolPath: 
+            dataIFT.WriteFileLastTick('C:/AmiExportData/SYMBOL/' + f'{symbol}_IFT.csv')
+            print("dataIFT ", last_tick_2)
+
+        # with open('C:/AmiExportData/' + f'{symbol}_MC.csv'.replace('/','').replace('^',''), 'a', newline='') as mcFile:
+        #     mcWriter = csv.writer(mcFile, delimiter=',', quoting=csv.QUOTE_NONE, escapechar='\\', doublequote=False) 
+        #     mcWriter.writerow(mcRow)
+        
     # df = metastock.metastock_read_last(dataTickPathDAT)  
     # newTime = df['time']    
     # newPrice = df['close']
@@ -138,6 +179,7 @@ for changes in watch(dataTick.symbolPath, dataIFT.symbolPath, step=1):
     # print(lastPrice)
     # print(lastVolume)
 
+# print("watch ok")
 # 'Request' example added jjk  11/20/98
 # import win32ui
 # from pywin.mfc import object

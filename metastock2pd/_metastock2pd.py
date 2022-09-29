@@ -462,7 +462,7 @@ def metastock_read_last(filename, offsetline = 0):
         file_handle.seek(0, os.SEEK_END)
         
         fields = int(file_handle.tell() / (last_record * 4))
-        print("metastock_read_last" , " ", fields)
+        # print("metastock_read_last" , " ", fields)
         if fields == 4:
             columns = ['date', 'time', 'close', 'volume']
         elif fields == 6:
@@ -558,3 +558,72 @@ def metastock_read_ift(filename, fields = 4):
     res['datetime'] = [datetime.datetime.combine(date, time) for date, time in zip(res['date'], res['time'])]
     res = res.set_index('datetime')
     return res
+
+def metastock_read_last_ift(filename, offsetline = 0):
+    """
+    reads a metastock .DAT file
+
+    Parameters
+    ----------
+    filename : str
+        location.
+    fields : int, optional
+        number of columns. The default is 7. Only 7 or 8 are supported
+
+    :Returns:
+    -------
+    res : pd.DataFrame
+        timeseries read
+    """
+    with open(filename, 'rb') as file_handle:
+        _ = struct.unpack("H", file_handle.read(2))[0]
+        last_record = struct.unpack("H", file_handle.read(2))[0]       
+        last_record += offsetline
+        file_handle.seek(0, os.SEEK_END)
+        
+        fields = 4 #int(file_handle.tell() / (last_record * 4))
+        # print("metastock_read_last" , " ", fields)
+        if fields == 4:
+            columns = ['date', 'time', 'close', 'volume']
+        elif fields == 6:
+            columns = ['time', 'open', 'high', 'low', 'close', 'volume']
+        elif fields == 7:
+            columns = ['date', 'open', 'high', 'low', 'close', 'volume', 'oi']
+        elif fields == 8:
+            columns = ['date', 'time', 'open', 'high', 'low', 'close', 'volume', 'oi']
+        else:
+            raise ValueError('do not know how to read this number of columns %i'%fields)
+        # file_handle.seek((fields) * 4, os.SEEK_SET)            
+        # for _ in range(last_rec - 2):            
+        # file_handle.seek(fields * 4 * (last_record - 1), os.SEEK_SET)        
+        file_handle.seek(0, os.SEEK_END)
+        file_handle.seek(-fields * 4, os.SEEK_CUR)
+        # file_handle.seek(-(fields) * 4, os.SEEK_CUR)
+        # for x in range(last_record - 2):         
+        #     for column in columns:
+        #         col = knownMSColumns.get(column)
+        #         if col is None:
+        #             file_handle.seek(unknownColumnDataSize, os.SEEK_CUR)
+        #         else:
+        #             byte = file_handle.read(col.dataSize)
+        rows = []
+        row = []
+        json = {}
+        for column in columns:
+            col = knownMSColumns.get(column)
+            if col is None:
+                file_handle.seek(unknownColumnDataSize, os.SEEK_CUR)
+            else:
+                byte = file_handle.read(col.dataSize)
+                value = col.read(byte)
+                row.append(value)
+                json[column] = value
+        rows.append(row)
+    res = pd.DataFrame(rows, columns = columns)
+    if fields == 8 or fields == 4:
+        res['datetime'] = [datetime.datetime.combine(date, time) for date, time in zip(res['date'], res['time'])]
+        res = res.set_index('datetime')
+    elif fields == 7:
+        res = res.set_index('date') 
+    # return res    
+    return json
