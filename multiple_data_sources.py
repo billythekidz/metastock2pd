@@ -103,15 +103,18 @@ digits = 1
 switch_data_sources_seconds = 10
 
 dataTick =  MetastockDataSources('C:\DataTick\intraday', "DATATICK")
-# dataIFT =  MetastockDataSources('C:\DataTick\intraday', "IFT")
+dataIFT =  MetastockDataSources('C:\\ami\MetaStock\Intraday\\futures', "IFT")
+dataF = MetastockDataSources('C:\FData\MetaStock\Intraday\Phai sinh', 'FDATA')
 # dataIFT = MetastockDataSources('C:\\ami\MetaStock\Intraday\\warrant', "IFT")
-dataIFT = MetastockDataSources('C:\\ami\MetaStock\EOD\other', "IFT")
-dataTick.SetSymbol('USD/JPY')# GetPath(dataTickPath, symbol)
-dataIFT.SetSymbol('^USD/JPY')
+# dataIFT = MetastockDataSources('C:\\ami\MetaStock\EOD\other', "IFT")
+dataTick.SetSymbol(symbol)# GetPath(dataTickPath, symbol)
+dataIFT.SetSymbol(symbol)
+dataF.SetSymbol(symbol)
 # dataTick.ListingSymbols()
 # dataIFT.ListingSymbols()
 print(dataIFT.symbolPath)
 print(dataTick.symbolPath)
+print(dataF.symbolPath)
 # iftPath = 'C:\\ami\MetaStock\EOD\other'#
 # iftPath = 'C:\\ami\MetaStock\Intraday\\futures'
 
@@ -119,10 +122,13 @@ lastPrice = -1
 lastVolume = -1
 lastTime = dt.datetime.now().time
 open_market_time = dt.datetime.strptime("09:00:00 AM", '%I:%M:%S %p')
-pausing_market_time = dt.datetime.strptime("11:30:00 AM", '%I:%M:%S %p')
+pausing_market_time = dt.datetime.strptime("11:30:59 AM", '%I:%M:%S %p')
 resume_market_time = dt.datetime.strptime("01:00:00 PM", '%I:%M:%S %p')
 close_market_time = dt.datetime.strptime("02:30:59 PM", '%I:%M:%S %p')
-for changes in watch(dataTick.symbolPath, dataIFT.symbolPath, step=1):
+last_tick_1 = []
+last_tick_2 = []
+last_tick_3 = []
+for changes in watch(dataTick.symbolPath, dataIFT.symbolPath, dataF.symbolPath, step=1):
     # print('.', sep=' ', end='', flush=True)   
     print(changes)
     # continue
@@ -135,19 +141,23 @@ for changes in watch(dataTick.symbolPath, dataIFT.symbolPath, step=1):
             last_tick_1 = dataTick.GetMyLastTick()       
         if change[1] == dataIFT.symbolPath: 
             last_tick_2 = dataIFT.GetMyLastTick()
-        
-        deltaTime = timenow-dt.datetime(dataTick.GetLastSaveTime())        
-        if (deltaTime.total_seconds >= switch_data_sources_seconds and dataTick.GetLastSaveTime() < dataIFT.GetLastSaveTime()):
-            dataIFT.WriteFileLastTick('C:/AmiExportData/' + f'{symbol}_TEST.csv', symbol)
-        else:
-            dataTick.WriteFileLastTick('C:/AmiExportData/' + f'{symbol}_TEST.csv', symbol)
+        if change[1] == dataF.symbolPath: 
+            last_tick_3 = dataF.GetMyLastTick()
+        deltaTime = timenow-(dataTick.GetLastSaveTime(symbol))        
+        # if (deltaTime.total_seconds() >= switch_data_sources_seconds and dataTick.GetLastSaveTime(symbol) < dataIFT.GetLastSaveTime(symbol)):
+        #     dataIFT.WriteFileLastTick('C:/AmiExportData/' + f'{symbol}_TEST.csv', symbol)
+        # else:
+        #     dataTick.WriteFileLastTick('C:/AmiExportData/' + f'{symbol}_TEST.csv', symbol)
 
         if change[1] == dataTick.symbolPath: 
-            dataTick.WriteFileLastTick('C:/AmiExportData/SYMBOL/' + f'{symbol}_DT.csv')                   
+            dataTick.WriteFileLastTick('C:/AmiExportData/SYMBOL/' + f'{symbol}_DT.csv', symbol)                   
             print("dataTick ", last_tick_1) 
         if change[1] == dataIFT.symbolPath: 
-            dataIFT.WriteFileLastTick('C:/AmiExportData/SYMBOL/' + f'{symbol}_IFT.csv')
+            dataIFT.WriteFileLastTick('C:/AmiExportData/SYMBOL/' + f'{symbol}_IFT.csv', symbol)
             print("dataIFT ", last_tick_2)
+        if change[1] == dataF.symbolPath: 
+            dataF.WriteFileLastTick('C:/AmiExportData/SYMBOL/' + f'{symbol}_F.csv', symbol)
+            print("dataF ", last_tick_3)
 
         # with open('C:/AmiExportData/' + f'{symbol}_MC.csv'.replace('/','').replace('^',''), 'a', newline='') as mcFile:
         #     mcWriter = csv.writer(mcFile, delimiter=',', quoting=csv.QUOTE_NONE, escapechar='\\', doublequote=False) 

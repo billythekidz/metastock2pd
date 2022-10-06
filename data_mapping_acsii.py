@@ -63,8 +63,7 @@ for changes in watch(pathDAT, step=1):
         print("===")
         continue
     tickvolume = newVolume - lastVolume
-    if newTime != lastTime: tickvolume = newVolume
-    if tickvolume < 0: tickvolume = 1
+    if newVolume < lastVolume: tickvolume = newVolume
 
     acsii_date = dateTime.strftime('%m/%d/%Y')    
     acsii_time = dateTime.strftime('%I:%M:%S %p')      
@@ -76,7 +75,7 @@ for changes in watch(pathDAT, step=1):
         mcWriter = csv.writer(mcFile, delimiter=',', quoting=csv.QUOTE_NONE, escapechar='\\', doublequote=False) 
         mcWriter.writerow(mcRow)
         
-    print(acsii_time + "  " + str(lastPrice) + "  " + str(lastVolume))  
+    print(acsii_time + "  " + str(lastPrice) + "  " + str(tickvolume))  
     # print(lastPrice)
     # print(lastVolume)
     

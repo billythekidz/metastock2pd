@@ -5,13 +5,14 @@ const https = require('https')
 const http = require('http');
 const dde = require('node-dde');
 const { Console } = require("console");
+const { CLIENT_RENEG_LIMIT } = require("tls");
 
 
 // Initialize express and define a port
 const app = express()
 const PORT = 4444
 const dde_server = dde.createServer('VNI');
-
+// dde_server.unregister()
 // Tell express to use body-parser's JSON parsing
 app.use(express.json())
 
@@ -59,24 +60,29 @@ dde_server.on('advise', function(topic, item, format) {
     //     bytes.push(charCode & 0xFF);
     // }
     // return  bytes;
+    // return "advise_" + i++;
 });
-// dde_server.on('request', function(service, topic, item, format) {
-//     console.log('OnRequest: '
-//     + 'Topic: ' + topic
-//     + ', Item: ' + item
-//     + ', Format: ' + format);
-//     return "advise_" + i++;
-//     // return i++;
-// });
+dde_server.on('request', function(service, topic, item, format) {
+    console.log('OnRequest: '
+    + 'Topic: ' + topic
+    + ', Item: ' + item
+    + ', Format: ' + format);
+    // return "advise_" + i++;
+    // return i++;
+});
 dde_server.onBeforeConnect = function(topic) { return true; };
 dde_server.onAfterConnect = function(service, topic) {};
 dde_server.onDisconnect = function(service, topic) {};
-dde_server.onStartAdvise = function(service, topic, item, format) { return true; };
+dde_server.onStartAdvise = function(service, topic, item, format) { return "advise_" + i++;};
 dde_server.onStopAdvise = function(service, topic, item) {};
-dde_server.onExecute = function(service, topic, command) {};
-dde_server.onPoke = function(service, topic, item, data, format) {};
-dde_server.onRequest = function(service, topic, item, format) { return 'advise_' + i++; }
-// dde_server.onAdvise = function(topic, item, format) { return 'advise_' + str(i++);};
+dde_server.onExecute = function(service, topic, command) { return "advise_" + i++;};
+dde_server.onPoke = function(service, topic, item, data, format) { return str(i++);
+  return "advise_" + i++;
+};
+dde_server.onRequest = function(service, topic, item, format) { return "advise_" + i++; }
+dde_server.onAdvise = function(topic, item, format) { 
+  return "advise_" + i++;
+}
 
 // var i = 0;
 // dde_server.onAdvise = function(topic, item, format) {
@@ -95,8 +101,24 @@ dde_server.onRequest = function(service, topic, item, format) { return 'advise_'
 // };
 // dde_server.onRequest = function(service, topic, item, format) { return i++; };
 
-setInterval(function() { dde_server.advise('TEST', 'C'); }, 1000);
+// setInterval(function() { dde_server.poke('TEST', 'C'); }, 1000);
+setInterval(function() { 
+  i++;
+  dde_server.advise('*', '*'); 
+  // client.poke('TEST', 'advise_' + i++); 
+}, 1000);
 
+dde_server.register();
+
+
+// client = dde.createClient('VNI', 'LAST');
+// client.connect();
+// setInterval(function() { 
+//   // dde_server.advise('*', '*'); 
+//   client.poke('TEST', 'advise_' + i++); 
+// }, 1000);
+
+// dde_server.dispose();
 // var i = 0;
 // dde_server.onAdvise = function() {
 //  return i++;
@@ -107,7 +129,7 @@ setInterval(function() { dde_server.advise('TEST', 'C'); }, 1000);
 // };
 // setInterval(function() { dde_server.advise('TEST', 'A'); dde_server.onAdvise(); console.log(i) }, 10);
 
-dde_server.register();
+
 
 
 // Start express on the defined port
