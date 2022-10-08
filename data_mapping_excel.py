@@ -16,6 +16,8 @@ from watchfiles import awatch, watch
 import time
 import win32ui, dde
 from pywin.mfc import object
+import asyncio
+import struct
 
 def GetPath(SYMBOL):
     # path = os.path.join(os.getcwd(), 'data')
@@ -33,7 +35,7 @@ def GetPath(SYMBOL):
     # print(rmaster)
     dicts = (res.to_dict('records'))    
     for record in dicts:
-        # print (record)
+        print (record)
         if record['symbol'] == SYMBOL:        
             return record['filename']
     return ""
@@ -48,7 +50,7 @@ def readDAT(filename):
     # plt.show()
 
 #   CONFIG HEADER
-symbol = 'USD/JPY'
+symbol = 'BTC/USD'
 digits = 2
 
 pathDAT = GetPath(symbol)
@@ -86,8 +88,9 @@ class DDETopic(object.Object):
             self.items[itemName] = dde.CreateStringItem(itemName)        
         self.topic.AddItem( self.items[itemName] )
         self.items[itemName].SetData( str(value) )        
-    def Request(self, aString):
-        return (self.items[aString])
+    def Request(self, aString):        
+        ba = bytearray(struct.pack("f", float(self.items[aString])))
+        return (float(self.items[aString]))
     # def StartAdvise(self, aString):
     #     return (self.items[aString])
     # def OnAdvise(self, aString):
@@ -100,45 +103,69 @@ lastPriceTopic = DDETopic('LastPrice')
 volumeTopic = DDETopic('Volume')
 ddeServer.AddTopic(lastPriceTopic)
 ddeServer.AddTopic(volumeTopic)
+# lastPriceTopic.setData("VN30", 0)
 ddeServer.Create('DDEMC')
+# conversation = dde.CreateConversation(ddeServer)
+# conversation.
 print('Created')
 
 cache_stamp = 0
+dumpPrice = 1000.0
 try:
-    while 1:    
+    while True:    
         stamp = os.stat(pathDAT).st_mtime    
         # print(stamp)
-        if stamp != cache_stamp:        
-            cache_stamp = stamp
-            dateTime = dt.datetime.now()
-            # if (dateTime.time() < open_market_time.time() or dateTime.time() > close_market_time.time()):        
-            #     continue     
-            df = metastock.metastock_read_last(pathDAT)  
-            newTime = df['time']    
-            newPrice = df['close']
-            newVolume = df['volume']
-            # if (newPrice == lastPrice and newVolume == lastVolume and newTime == lastTime): 
-            #     print("===")
-            #     continue
-            tickvolume = newVolume - lastVolume
-            if newVolume < lastVolume: tickvolume = newVolume
+        # if stamp != cache_stamp:        
+        cache_stamp = stamp
+        dateTime = dt.datetime.now()
+        # if (dateTime.time() < open_market_time.time() or dateTime.time() > close_market_time.time()):        
+        #     continue     
+        df = metastock.metastock_read_last(pathDAT)  
+        newTime = df['time']    
+        newPrice = df['close']
+        newVolume = df['volume']
+        # if (newPrice == lastPrice and newVolume == lastVolume and newTime == lastTime): 
+        #     print("===")
+        #     continue
+        tickvolume = newVolume - lastVolume
+        if newVolume < lastVolume: tickvolume = newVolume
 
-            acsii_date = dateTime.strftime('%m/%d/%Y')    
-            acsii_time = dateTime.strftime('%I:%M:%S %p')      
-            lastPrice = round(newPrice,digits)
-            lastVolume = newVolume
-            lastTime = newTime
+        acsii_date = dateTime.strftime('%m/%d/%Y')    
+        acsii_time = dateTime.strftime('%I:%M:%S %p')      
+        lastPrice = round(newPrice,digits)
+        lastVolume = newVolume
+        lastTime = newTime
 
-            # yourData = time.ctime() + ' UP0 DN145000001 UMusb DMfm AZ040 EL005 SNNO SATELLITE'
-            lastPriceTopic.setData("VN30", lastPrice)
-            volumeTopic.setData("VN30", lastVolume)
-            # ddeServer.Advise()
-            print(acsii_time + "  " + str(lastPrice) + "  " + str(lastVolume))  
+        # yourData = time.ctime() + ' UP0 DN145000001 UMusb DMfm AZ040 EL005 SNNO SATELLITE'
+        lastPriceTopic.setData("VN30", dumpPrice)
+        volumeTopic.setData("VN30", dumpPrice)
+        dumpPrice +=0.1
+        # ddeServer.Advise()
+        # print(acsii_time + "  " + str(lastPrice) + "  " + str(lastVolume))  
 
+        # win32ui.PumpWaitingMessages(0, -1)
         win32ui.PumpWaitingMessages(0, -1)
-        sleep(0.0001)
+        sleep(1)
 except KeyboardInterrupt:
     pass
+
+# async def getDataRealTime(symbol, path):
+#     # async for changes in awatch(path):
+#     dumpPrice = 1000.0
+#     while True:
+#         # file changed
+#         # df = metastock.metastock_read_last(path)
+#         # ddeLastPrice.setData('E', df['close'])       
+#         # ddeVolume.setData('E', df['volume']) 
+#         lastPriceTopic.setData("VN30", dumpPrice)
+#         volumeTopic.setData("VN30", dumpPrice)
+#         dumpPrice +=0.1
+#         # print(df['close'])
+#         # print(df['volume'])
+#         win32ui.PumpWaitingMessages(0, -1)
+#         sleep(1)
+# # getDataRealTime(symbol, pathDAT)
+# asyncio.run(getDataRealTime(symbol, pathDAT))
 
 ddeServer.Shutdown()
 

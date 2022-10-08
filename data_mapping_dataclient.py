@@ -1,15 +1,11 @@
-from sqlite3 import Time
-import pandas as pd
-import pyodbc 
-import datetime as dt
-from time import sleep
-import csv
-import os
-from sqlalchemy.engine import URL
-from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, event, MetaData
+# from sqlite3 import Time
+# import pandas as pd
+
+# from sqlalchemy.engine import URL
+# from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, event, MetaData
 # from sqlalchemy.orm import declarative_base
-from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.ext.declarative import declarative_base
+# from sqlalchemy.ext.automap import automap_base
+# from sqlalchemy.ext.declarative import declarative_base
 
 # connection_string = "DRIVER={SQL Server Native Client 11.0};SERVER=localhost\SQLExpress;DATABASE=StockData;Trusted_Connection=yes;"
 # connection_url = URL.create("mssql+pyodbc", query={"odbc_connect": connection_string})
@@ -47,7 +43,11 @@ from sqlalchemy.ext.declarative import declarative_base
 # @event.listens_for(SomeClass.some_attribute, 'append')
 # def receive_append(target, value, initiator):
 #     "listen for the 'append' event"
-
+import pyodbc 
+import datetime as dt
+from time import sleep
+import csv
+import os
 #     # ... (event handling logic) ...
 conn = pyodbc.connect('Driver={SQL Server};'
                       'Server=localhost\SQLExpress;'
