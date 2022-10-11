@@ -56,15 +56,16 @@ def GetPath(SYMBOL):
     return ""
 
 #   CONFIG HEADER
-symbol = 'VN30F1M'
+symbol = 'USD/JPY'
 digits = 2
 
 #     # ... (event handling logic) ...
-# conn = pyodbc.connect('Driver={SQL Server};'
-#                       'Server=localhost\SQLExpress;'
-#                       'Database=StockData;'
-#                       'Trusted_Connection=yes;')
-# queryLastRecord = f'SELECT TOP 1 SYMBOL,DATE,[OPEN],VOLUME FROM VN_Intraday WHERE SYMBOL=\'{symbol}\' ORDER BY DATE DESC'
+conn = pyodbc.connect('Driver={SQL Server};'
+                      'Server=localhost\SQLExpress;'
+                      'Database=StockData;'
+                      'Trusted_Connection=yes;')
+
+queryLastRecord = f'SELECT TOP 1 SYMBOL,DATE,[OPEN],VOLUME FROM VN_Intraday WHERE SYMBOL=\'{symbol}\' ORDER BY DATE DESC'
 
 pathDAT = GetPath(symbol)
 print(pathDAT)
@@ -90,19 +91,41 @@ try:
             newTime = df['time']    
             newPrice = df['close']
             newVolume = df['volume']
-            
             tickvolume = newVolume - lastVolume
             if newVolume < lastVolume: tickvolume = newVolume
-            lastVolume = newVolume
-
             acsii_date = dateTime.strftime('%m/%d/%Y')    
             acsii_time = dateTime.strftime('%I:%M:%S %p')      
-            lastPrice = float(round(newPrice,digits))            
-            lastTime = newTime    
-            # dumpPrice +=0.1
-            # symbol = 'VN30XX'
-            sio.emit(symbol, {'symbol': symbol, 'time': int(round(dateTime.timestamp())), 'price':lastPrice, 'volume': int(tickvolume), 'digits':1})   
-            print(acsii_time + "  " + str(lastPrice) + "  " + str(tickvolume))  
+            lastPrice = float(round(newPrice,digits))
+            lastVolume = int(tickvolume)
+            lastTime = newTime
+        # GET DATA CLIENT
+        cursor = conn.cursor()
+        #run query to pull newest row
+        cursor.execute(queryLastRecord)
+        lastRecord = cursor.fetchone()
+        # print(results[1])
+        if lastTickTime < lastRecord[1]:
+            lastTickTime = lastRecord[1]
+            datetime = lastRecord[1]  
+            # if (datetime.time() < open_market_time.time() or datetime.time() > close_market_time.time()): return   
+            acsii_date = datetime.strftime('%m/%d/%Y')    
+            acsii_time = datetime.strftime('%I:%M:%S %p')      
+            price = round(lastRecord[2], digits)
+            volume = int(lastRecord[3])
+            # print(lastRecord)
+    
+        # dumpPrice +=0.1
+        # symbol = 'VN30XX'
+
+        sio.emit(symbol, {'symbol': symbol, 'time': int(round(dateTime.timestamp())), 'price':lastPrice, 'volume':lastVolume, 'digits':1})   
+
+        print(acsii_time + "  " + str(lastPrice) + "  " + str(tickvolume))  
   
 except KeyboardInterrupt:
     pass
+
+
+while True:
+
+
+conn.close()

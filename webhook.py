@@ -29,6 +29,8 @@ if __name__ == '__main__':
     WAIT_FOR = 5
     count_down = WAIT_FOR
     sum_trade = {}
+    total_position = 0
+    accept_slippage = 0.1
     while 1:
         if count_down <= 0:            
             while len(signalQueue) > 0:
@@ -46,14 +48,19 @@ if __name__ == '__main__':
                 try:
                     symbol = 'VN30F1M'
                     side = 'NB'
+                    price = price + accept_slippage                    
                     quantity = sum_trade[clientId]
-                    if quantity < 0: side = 'NS'   
-                    signalUrl = f"http://localhost:6868/api/trade?symbol={symbol}&side={side}&clientId={client}&quantity={abs(quantity)}" 
-                    # if price > 0:
-                    #     signalUrl = f"http://localhost:6868/api/trade?symbol={symbol}&side={side}&clientId={client}&quantity={abs(quantity)}&price={abs(price)}"                                             
+                    if quantity < 0: 
+                        side = 'NS'      
+                        price = price - accept_slippage      
+                    signalUrl = f"http://localhost:6868/api/trade?symbol={symbol}&side={side}&clientId={client}&quantity={abs(quantity)}"           
+                    if (total_position >= 0 and quantity > 0) or (total_position <= 0 and quantity < 0):
+                        signalUrl = f"http://localhost:6868/api/trade?symbol={symbol}&side={side}&clientId={client}&quantity={abs(quantity)}&price={abs(price)}"
+                    # else:                                                                           
+                    total_position += quantity
                     print(signalUrl)
-                    response = requests.get(signalUrl)
-                    print(response.text)            
+                    print("total_position " + total_position)         
+                    response = requests.get(signalUrl)                       
                 except:
                     print("FAIL", 200)        
                 sum_trade.pop(client, None)
