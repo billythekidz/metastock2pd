@@ -18,32 +18,32 @@ from time import sleep
 import csv
 import os
 
-# portSocket = 11003
-# sio = socketio.Server(async_mode='threading')
-# app = Flask(__name__)
-# app.wsgi_app = socketio.WSGIApp(sio, app.wsgi_app)
-# # sio = socketio.AsyncServer(async_mode='tornado')
-# # app = tornado.web.Application(
-# #     [
-# #         (r"/socket.io/", socketio.get_tornado_handler(sio)),
-# #     ],
-# #     # ... other application options
-# # )
-# # app.listen(port)
+portSocket = 11003
+sio = socketio.Server(async_mode='threading')
+app = Flask(__name__)
+app.wsgi_app = socketio.WSGIApp(sio, app.wsgi_app)
+# sio = socketio.AsyncServer(async_mode='tornado')
+# app = tornado.web.Application(
+#     [
+#         (r"/socket.io/", socketio.get_tornado_handler(sio)),
+#     ],
+#     # ... other application options
+# )
+# app.listen(port)
 
 
-# @sio.event
-# def connect(sid, environ, auth):
-#     print('socketio connect ', sid)
+@sio.event
+def connect(sid, environ, auth):
+    print('socketio connect ', sid)
 
-# @sio.event
-# def disconnect(sid):
-#     print('socketio disconnect ', sid)
-# # webhook = Thread(target=lambda: pywsgi.WSGIServer(('', 11003), app, handler_class=WebSocketHandler).serve_forever())
-# webhook = Thread(target=lambda: app.run(port=portSocket,debug=True,use_reloader=False))
-# # webhook = Thread(target=lambda: tornado.ioloop.IOLoop.current().start())
-# webhook.daemon = True
-# webhook.start() 
+@sio.event
+def disconnect(sid):
+    print('socketio disconnect ', sid)
+# webhook = Thread(target=lambda: pywsgi.WSGIServer(('', 11003), app, handler_class=WebSocketHandler).serve_forever())
+webhook = Thread(target=lambda: app.run(port=portSocket,debug=True,use_reloader=False))
+# webhook = Thread(target=lambda: tornado.ioloop.IOLoop.current().start())
+webhook.daemon = True
+webhook.start() 
 # 
 #    
 symbol = 'VN30F1M'
@@ -139,7 +139,7 @@ try:
         # dumpPrice +=0.1
         # symbol = 'VN30XX'
 
-        # sio.emit(symbol, {'symbol': symbol, 'time': int(round(lastTickRecord[0].timestamp())), 'price':lastTickRecord[1], 'volume':lastTickRecord[2], 'digits':1})   
+        sio.emit(symbol, {'symbol': symbol, 'time': int(round(lastTickRecord[0].timestamp())), 'price':lastTickRecord[1], 'volume':lastTickRecord[2], 'digits':1})   
 
         print("=> " + str(lastTickRecord[0]) + "  " + str(lastTickRecord[1]) + "  " + str(lastTickRecord[2])) 
         export(symbol, lastTickRecord)
