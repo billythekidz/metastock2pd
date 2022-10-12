@@ -35,7 +35,7 @@ currentDateString = dt.datetime.now().strftime('%d%m%Y')
 pathExport = f'C:/AmiExportData/'
 os.makedirs(pathExport, exist_ok = True)
 def export(symbol, record):
-    print("Export: " + record)
+    print("Export: " + str(record[0]))
     timenow = dt.datetime.now()
     timenows = timenow.strftime('%d%m%Y') 
     with open(pathExport + f'{symbol}_MC.csv'.replace('/','').replace('^',''), 'a', newline='') as mcFile:
@@ -96,7 +96,7 @@ try:
             lastTime = newTime
             lastTickRecord = [dateTime, lastPrice, tickvolume]     
             isNewTick = True                
-            print("DT: " + str(lastTickRecord[0]) + "  " + str(lastTickRecord[1]) + "  " + str(lastTickRecord[2])) 
+            # print("DT: " + str(lastTickRecord[0]) + "  " + str(lastTickRecord[1]) + "  " + str(lastTickRecord[2])) 
         # GET DATA CLIENT
         cursor = conn.cursor()
         #run query to pull newest row
@@ -107,7 +107,7 @@ try:
             volume = int(lastRecord[3])
             lastTickRecord = [lastRecord[1], price, volume]            
             isNewTick = True
-            print("DC: " + str(lastRecord[1]) + " " + str(lastRecord[2]) + " " + str(lastRecord[3]))
+            # print("DC: " + str(lastRecord[1]) + " " + str(lastRecord[2]) + " " + str(lastRecord[3]))
         if not isNewTick: continue        
         # dumpPrice +=0.1
         # symbol = 'VN30XX'
