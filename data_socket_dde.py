@@ -108,43 +108,44 @@ try:
         # isInTradingTime = True
         # print(stamp)
         # GET DATA TICK
-        if stamp != cache_stamp and isInTradingTime:      
-            cache_stamp = stamp 
-            df = metastock.metastock_read_last(pathDAT)  
-            newTime = df['time']    
-            newPrice = df['close']
-            newVolume = df['volume']
-            tickvolume = newVolume - lastVolume
-            if newVolume < lastVolume: tickvolume = newVolume
-            tickvolume = int(tickvolume)
-            acsii_date = dateTime.strftime('%m/%d/%Y')    
-            acsii_time = dateTime.strftime('%I:%M:%S %p')      
-            lastPrice = float(round(newPrice,digits))
-            lastVolume = newVolume
-            lastTime = newTime
-            lastTickRecord = [dateTime, lastPrice, tickvolume]     
-            isNewTick = True                
-            print("DT: " + str(lastTickRecord[0]) + "  " + str(lastTickRecord[1]) + "  " + str(lastTickRecord[2])) 
-        # GET DATA CLIENT
-        cursor = conn.cursor()
-        #run query to pull newest row
-        cursor.execute(queryLastRecord)
-        lastRecord = cursor.fetchone()          
-        if lastRecord and (len(lastTickRecord) <= 0 or lastTickRecord[0] < lastRecord[1]) and isInTradingTime:
-            price = round(lastRecord[2], digits)
-            volume = int(lastRecord[3])
-            lastTickRecord = [lastRecord[1], price, volume]            
-            isNewTick = True
-            print("DC: " + str(lastRecord[1]) + " " + str(lastRecord[2]) + " " + str(lastRecord[3]))
-        if not isNewTick: continue        
-        # dumpPrice +=0.1
-        # symbol = 'VN30XX'
-
-        sio.emit(symbol, {'symbol': symbol, 'time': int(round(lastTickRecord[0].timestamp())), 'price':lastTickRecord[1], 'volume':lastTickRecord[2], 'digits':1})   
-
-        print("=> " + str(lastTickRecord[0]) + "  " + str(lastTickRecord[1]) + "  " + str(lastTickRecord[2])) 
-        # export(symbol, lastTickRecord)
-        # print(lastTickRecord) 
+        try:
+            if stamp != cache_stamp and isInTradingTime:      
+                cache_stamp = stamp 
+                df = metastock.metastock_read_last(pathDAT)  
+                newTime = df['time']    
+                newPrice = df['close']
+                newVolume = df['volume']
+                tickvolume = newVolume - lastVolume
+                if newVolume < lastVolume: tickvolume = newVolume
+                tickvolume = int(tickvolume)
+                acsii_date = dateTime.strftime('%m/%d/%Y')    
+                acsii_time = dateTime.strftime('%I:%M:%S %p')      
+                lastPrice = float(round(newPrice,digits))
+                lastVolume = newVolume
+                lastTime = newTime
+                lastTickRecord = [dateTime, lastPrice, tickvolume]     
+                isNewTick = True                
+                print("DT: " + str(lastTickRecord[0]) + "  " + str(lastTickRecord[1]) + "  " + str(lastTickRecord[2])) 
+            # GET DATA CLIENT
+            cursor = conn.cursor()
+            #run query to pull newest row
+            cursor.execute(queryLastRecord)
+            lastRecord = cursor.fetchone()          
+            if lastRecord and (len(lastTickRecord) <= 0 or lastTickRecord[0] < lastRecord[1]) and isInTradingTime:
+                price = float(round(lastRecord[2], digits))
+                volume = int(lastRecord[3])
+                lastTickRecord = [lastRecord[1], price, volume]            
+                isNewTick = True
+                print("DC: " + str(lastRecord[1]) + " " + str(lastRecord[2]) + " " + str(lastRecord[3]))
+            if not isNewTick: continue        
+            # dumpPrice +=0.1
+            # symbol = 'VN30XX'
+            sio.emit(symbol, {'symbol': symbol, 'time': int(round(lastTickRecord[0].timestamp())), 'price':lastTickRecord[1], 'volume':lastTickRecord[2], 'digits':1})   
+            print("=> " + str(lastTickRecord[0]) + "  " + str(lastTickRecord[1]) + "  " + str(lastTickRecord[2])) 
+            # export(symbol, lastTickRecord)
+            # print(lastTickRecord) 
+        except Exception:
+            pass
   
 except KeyboardInterrupt:
     pass

@@ -21,16 +21,19 @@ def vn30():
         abort(400)
 
 if __name__ == '__main__':    
-    
     webhook = Thread(target=lambda: app.run(port=1159,debug=True,use_reloader=False))
     webhook.daemon = True
     webhook.start()    
-    print("Press Shift + Q to exit")
+
+try:
+
+    # print("Press Shift + Q to exit")
     WAIT_FOR = 5
     count_down = WAIT_FOR
     sum_trade = {}
     total_position = 0
-    accept_slippage = 0.1
+    accept_slippage = 0.4
+    price = 0
     while 1:
         if count_down <= 0:            
             while len(signalQueue) > 0:
@@ -48,14 +51,14 @@ if __name__ == '__main__':
                 try:
                     symbol = 'VN30F1M'
                     side = 'NB'
-                    # price = price + accept_slippage                    
+                    orderPrice = price + accept_slippage                    
                     quantity = sum_trade[clientId]
                     if quantity < 0: 
                         side = 'NS'      
-                        # price = price - accept_slippage      
-                    signalUrl = f"http://localhost:6868/api/trade?symbol={symbol}&side={side}&clientId={client}&quantity={abs(quantity)}"           
+                        orderPrice = price - accept_slippage      
+                    # signalUrl = f"http://localhost:6868/api/trade?symbol={symbol}&side={side}&clientId={client}&quantity={abs(quantity)}"           
                     # if (total_position >= 0 and quantity > 0) or (total_position <= 0 and quantity < 0):
-                    #     signalUrl = f"http://localhost:6868/api/trade?symbol={symbol}&side={side}&clientId={client}&quantity={abs(quantity)}&price={abs(price)}"
+                    signalUrl = f"http://localhost:6868/api/trade?symbol={symbol}&side={side}&clientId={client}&quantity={abs(quantity)}&price={abs(orderPrice)}"
                     # else:                                                                           
                     # total_position += quantity
                     print(signalUrl)
@@ -66,8 +69,10 @@ if __name__ == '__main__':
                 sum_trade.pop(client, None)
                 count_down = WAIT_FOR
                 break    
-        sleep(0.01)
-        count_down -= 0.01
-        if keyboard.is_pressed("shift+q"):
-            print("q pressed, ending loop")
-            sys.exit()
+        sleep(0.001)
+        count_down -= 0.001
+        # if keyboard.is_pressed("shift+q"):
+        #     print("q pressed, ending loop")
+        #     sys.exit()
+except KeyboardInterrupt:
+    pass

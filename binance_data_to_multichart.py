@@ -3,11 +3,11 @@ import datetime as dt
 import os
 import pandas as pd
 
-path = 'C:/Users/Administrator/Downloads/ETHBUSD_TICK'
+path = 'C:/Users/Administrator/Documents/MultiCharts/DATA/ETHBUSD'
 listFiles = os.listdir(path)
 listFiles.reverse()
 for p in listFiles:
-    if ("NEW" in p): continue
+    if ("NEW" in p or "zip" in p): continue
     # if ("2022-09" in p): continue
     pathFile = path + "/" + p
     pathNewFile = path + "/" + p.replace('.csv','-NEW.csv')
