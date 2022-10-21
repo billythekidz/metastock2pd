@@ -92,7 +92,7 @@ print(pathDAT)
 lastPrice = -1
 lastVolume = -1
 lastTime = dt.datetime.now().time
-open_market_time = dt.datetime.strptime("09:00:00 AM", '%I:%M:%S %p')
+open_market_time = dt.datetime.strptime("09:00:01 AM", '%I:%M:%S %p')
 close_market_time = dt.datetime.strptime("02:30:59 PM", '%I:%M:%S %p')
 cache_stamp = 0
 dumpPrice = 1000.0
@@ -104,7 +104,7 @@ try:
         stamp = os.stat(pathDAT).st_mtime    
         dateTime = dt.datetime.now()             
         isNewTick = False   
-        isInTradingTime = dateTime.time() >= open_market_time.time() and dateTime.time() <= close_market_time.time()
+        isInTradingTime = dateTime.time() > open_market_time.time() and dateTime.time() <= close_market_time.time()
         # isInTradingTime = True
         # print(stamp)
         # GET DATA TICK

@@ -12,7 +12,7 @@ conn = pyodbc.connect('Driver={SQL Server};'
 symbol='VN30F1M'
 digits = 1
 todayOnly = False
-open_market_time = dt.datetime.strptime("09:00:00 AM", '%I:%M:%S %p')
+open_market_time = dt.datetime.strptime("09:00:01 AM", '%I:%M:%S %p')
 close_market_time = dt.datetime.strptime("02:30:59 PM", '%I:%M:%S %p')
 timenow = dt.datetime.now()
 timenows = timenow.strftime('%d%m%Y') 

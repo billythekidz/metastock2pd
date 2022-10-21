@@ -11,43 +11,6 @@ from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, event
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.ext.declarative import declarative_base
 
-# connection_string = "DRIVER={SQL Server Native Client 11.0};SERVER=localhost\SQLExpress;DATABASE=StockData;Trusted_Connection=yes;"
-# connection_url = URL.create("mssql+pyodbc", query={"odbc_connect": connection_string})
-
-# engine = create_engine(connection_url)
-
-# # produce our own MetaData object
-# metadata = MetaData()
-
-# # we can reflect it ourselves from a database, using options
-# # such as 'only' to limit what tables we look at...
-# metadata.reflect(engine, only=['SYMBOL', 'DATE', 'OPEN', 'VOLUME'])
-# # we can then produce a set of mappings from this MetaData.
-# Base = automap_base(metadata=metadata)
-
-# # calling prepare() just sets up mapped classes and relationships.
-# Base.prepare()
-
-# # mapped classes are ready
-# Date, Price, Volume = Base.classes.DATE, Base.classes.OPEN, Base.classes.VOLUME
-
-# Base = automap_base()
-# reflect the tables
-# Base.prepare(autoload_with=engine)
-# mapped classes are now created with names by default
-# matching that of the table name.
-# Datetime = Base.classes.DATE
-# Price = Base.classes.OPEN
-# Volume = Base.classes.VOLUME
-
-# @event.listens_for(Date, 'after_insert')
-# def receive_after_insert(mapper, connection, target):
-#     # "listen for the 'after_insert' event"
-#     print(mapper, "after insert ")
-# @event.listens_for(SomeClass.some_attribute, 'append')
-# def receive_append(target, value, initiator):
-#     "listen for the 'append' event"
-
 #     # ... (event handling logic) ...
 conn = pyodbc.connect('Driver={SQL Server};'
                       'Server=localhost\SQLExpress;'

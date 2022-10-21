@@ -3,7 +3,7 @@ import datetime as dt
 import os
 import pandas as pd
 
-path = 'C:/Users/Administrator/Documents/MultiCharts/DATA/ETHBUSD'
+path = 'C:/Users/Administrator/Documents/MultiCharts/DATA/ETHUSDT_F'
 listFiles = os.listdir(path)
 listFiles.reverse()
 for p in listFiles:
@@ -36,13 +36,14 @@ for p in listFiles:
             # 
             datetime = dt.datetime.fromtimestamp(timestamp) #
             if count == 2: lastestTime = datetime
-            if lastestTime >= datetime:
+            if lastestTime > datetime:
+                continue
                 # print("before " + str(lastestTime.microsecond))
                 # print("last " + str(lastestTime.timestamp()))
                 datetime = dt.datetime.fromtimestamp(lastestTime.timestamp() + 0.001)
                 # print("after " + str(datetime.microsecond))                
             lastestTime = datetime
-            date = datetime.strftime('%m-%d-%Y') 
+            date = datetime.strftime('%d-%m-%Y') 
             time = datetime.strftime('%H:%M:%S.%f')[:-3]                                                                   
             mcRow = [date, time, price, volume] 
             mcWriter.writerow(mcRow)            

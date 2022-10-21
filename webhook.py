@@ -32,8 +32,8 @@ try:
     count_down = WAIT_FOR
     sum_trade = {}
     total_position = 0
-    accept_slippage = 0.4
-    price = 0
+    accept_slippage = 0.5
+    price = 0.0
     while 1:
         if count_down <= 0:            
             while len(signalQueue) > 0:
@@ -42,7 +42,7 @@ try:
                 side = args.get('side', 'NB')
                 clientId = args.get('clientId', 2, int)
                 quantity = args.get('quantity', 1, int)        
-                price = round(args.get('price', 0, float),1)     
+                price = round(args.get('price', 0, float),1)
                 sum_trade.setdefault(clientId, 0)    
                 if side == 'NS': sum_trade[clientId] -= quantity
                 else: sum_trade[clientId] += quantity

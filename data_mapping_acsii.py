@@ -66,7 +66,7 @@ print(pathDAT)
 lastPrice = -1
 lastVolume = -1
 lastTime = dt.datetime.now().time
-open_market_time = dt.datetime.strptime("09:00:00 AM", '%I:%M:%S %p')
+open_market_time = dt.datetime.strptime("09:00:02 AM", '%I:%M:%S %p')
 close_market_time = dt.datetime.strptime("02:30:59 PM", '%I:%M:%S %p')
 cache_stamp = 0
 dumpPrice = 1000.0
