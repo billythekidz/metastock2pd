@@ -3,7 +3,7 @@ import datetime as dt
 import os
 import pandas as pd
 
-path = 'C:/Users/Administrator/Documents/MultiCharts/DATA/ETHUSDT_F'
+path = 'C:/Users/Administrator/Documents/MultiCharts/DATA/XRPUSDT_F'
 listFiles = os.listdir(path)
 listFiles.reverse()
 for p in listFiles:
